@@ -1,0 +1,2 @@
+# iIgnore entire directory of virtual environment with all its contents (it needs to include the name of the directory with the slash "/" at the end)
+.venv/
