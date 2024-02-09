@@ -30,7 +30,7 @@ class SobolBes:
         
         # Define the model inputs
         self.idf = None
-        self.problem = {'num_var': len(parameters), 'names': [], 'bounds': []}
+        self.problem = {'num_vars': len(parameters), 'names': [], 'bounds': []}
         self.problem['bounds'] = parameters['bounds']
         self.objects = parameters['obj_id']
         
@@ -46,7 +46,7 @@ class SobolBes:
         # Generate samples
         self.X = sample(self.problem, 1024)
         self.Y = None
-        self.Si = None
+        self.si = None
         
     @abstractmethod
     def set_idf(self, idf_path, epw_path, idd_path):
@@ -208,7 +208,8 @@ parameters = {'bounds': [[0.05, 0.5],
                           'DesignSpecification:OutdoorAir,RDC:TESLA Design Specification Outdoor Air Object,Outdoor Air Flow per Zone Floor Area',
                           'DesignSpecification:OutdoorAir,Etage:NOBEL Design Specification Outdoor Air Object,Outdoor Air Flow per Zone Floor Area',
                           'DesignSpecification:OutdoorAir,Etage:TURING Design Specification Outdoor Air Object,Outdoor Air Flow per Zone Floor Area']
-                        ],
+                        ]
+            }
             
 
 # Setting idd file in IDF class
