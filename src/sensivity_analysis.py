@@ -33,9 +33,14 @@ class SobolBes:
         self.problem = {'num_var': len(parameters), 'names': [], 'bounds': []}
         self.problem['bounds'] = parameters['bounds']
         self.objects = parameters['obj_id']
+        
+        for obj in self.objects:
+            self.problem['names'].append(obj[0])
+        """
         for key, value in parameters:
             self.problem['names'].append(key)
             self.problem['bounds'].append(value)
+        """
      
 
         # Generate samples
@@ -92,63 +97,63 @@ class SobolBes:
                 - `names` - the names of the parameters
         """
         if self.Y is None:
-            raise NameError('Y, evaluate is not defined. run e+ models first')
+            raise NameError('Y, evaluate is not defined. Run E+ models first')
         self.si = analyze(self.problem, self.X, self.Y)
         return self.si
     
     
-    class SobolEppy(SobolBes):
+class SobolEppy(SobolBes):
 
-        # Concret definition of the abstract method set_idf()
-        def set_idf(self, idf_path, epw_path, idd_path):
-            IDF.setiddname(idd_path)
-            self.idf = IDF(idf_path, epw_path)
+    # Concret definition of the abstract method set_idf()
+    def set_idf(self, idf_path, epw_path, idd_path):
+        IDF.setiddname(idd_path)
+        self.idf = IDF(idf_path, epw_path)
 
-        # Concret definition of the abstract method run_models()
-        def run_models(self, processors):
-            if self.idf is None:
-                raise TypeError('idf file has NOT  been set')
-            utility = EppyUtilityIdf
-            idf_list = []
-            file_dir = os.path.dirname(__file__)
-            output_folder = os.path.join(file_dir, 'SA_results')
-            try:
-                shutil.rmtree(output_folder)
-            except FileNotFoundError as err:
-                print(err)
-            os.mkdir(output_folder)
+    # Concret definition of the abstract method run_models()
+    def run_models(self, processors):
+        if self.idf is None:
+            raise TypeError('idf file has NOT  been set')
+        utility = EppyUtilityIdf
+        idf_list = []
+        file_dir = os.path.dirname(__file__)
+        output_folder = os.path.join(file_dir, 'SA_results')
+        try:
+            shutil.rmtree(output_folder)
+        except FileNotFoundError as err:
+            print(err)
+        os.mkdir(output_folder)
 
-            for i, values in enumerate(self.X):   #each sample
-                idf_temp = utility.copy(self.idf)
-                for j, value in enumerate(values):
-                    for obj in self.objects[j]:
-                        obj_id, obj_name, field = obj.split(',')
-                        utility.idf_handle(idf_temp, obj_id, obj_name, field, value)
-                idf_temp.idfname = os.path.join(output_folder, 'run-{}.idf'.format(i))
-                idf_temp.save()
+        for i, values in enumerate(self.X):   #each sample
+            idf_temp = utility.copy(self.idf)
+            for j, value in enumerate(values):
+                for obj in self.objects[j]:
+                    obj_id, obj_name, field = obj.split(',')
+                    utility.idf_handle(idf_temp, obj_id, obj_name, field, value)
+            idf_temp.idfname = os.path.join(output_folder, 'run-{}.idf'.format(i))
+            idf_temp.save()
 
-                sim_settings = {'EnergyPlus_version': '9.4.0', 
-                                'verbose': 'q', 
-                                'output_directory': output_folder,
-                                'readvars': True,
-                                'output_prefix': "run-{}-".format(i)}
-                idf_list.append([idf_temp, sim_settings])
+            sim_settings = {'EnergyPlus_version': '9.4.0', 
+                            'verbose': 'q', 
+                            'output_directory': output_folder,
+                            'readvars': True,
+                            'output_prefix': "run-{}-".format(i)}
+            idf_list.append([idf_temp, sim_settings])
 
-            
-            run_functions.runIDFs(idf_list, processors=processors)
-            # retrieve E+ outputs after simulation have been done
-            num_samples = self.X.shape[0]
-            self.Y = np.zeros(num_samples)
+        
+        run_functions.runIDFs(idf_list, processors=processors)
+        # retrieve E+ outputs after simulation have been done
+        num_samples = self.X.shape[0]
+        self.Y = np.zeros(num_samples)
 
 
-            for k in range(num_samples):
-                output_file = os.path.join(output_folder, 'run-{}-table.htm'.format(k))
-                with open(output_file, "r", encoding='ISO-8859-1') as f:
-                    results_table = readhtml.titletable(f.read)
+        for k in range(num_samples):
+            output_file = os.path.join(output_folder, 'run-{}-table.htm'.format(k))
+            with open(output_file, "r", encoding='ISO-8859-1') as f:
+                results_table = readhtml.titletable(f.read)
 
-            total_site_energy = utility.get_output(results_table, ['Site and Source Energy', 'Total Site Energy'])
-            total_site_energy_per_area = total_site_energy[1]
-            self.Y[k] = total_site_energy_per_area
+        total_site_energy = utility.get_output(results_table, ['Site and Source Energy', 'Total Site Energy'])
+        total_site_energy_per_area = total_site_energy[1]
+        self.Y[k] = total_site_energy_per_area
 
 
 
@@ -163,14 +168,14 @@ epw_path = os.path.abspath(os.path.join(folder_parent, epw_file))
 
 # Parameters for sensivity analysis: bounds, the id of each object in EnergyPlus and the number of parameters
 parameters = {'bounds': [[0.05, 0.5],
-                         [1, 5]
-                         [0.8, 1],
-                         [0.05, 1],
+                         [1.0, 5.0],
+                         [0.8, 1.0],
+                         [0.05, 1.0],
                          [0.1, 0.8],
                          [0.1, 0.9],
-                         [2, 25 ],
-                         [4, 12 ],
-                         [0, 0.0038]],
+                         [2.0, 25.0 ],
+                         [4.0, 12.0 ],
+                         [0.0, 0.0038]],
               'obj_id': [
                          ['Material:RoofVegetation,NR3 - Vegetation_.15,Leaf Area Index'],
                          ['Material:RoofVegetation,NR3 - Vegetation_.15,Leaf Reflectivity'],
@@ -204,7 +209,6 @@ parameters = {'bounds': [[0.05, 0.5],
                           'DesignSpecification:OutdoorAir,Etage:NOBEL Design Specification Outdoor Air Object,Outdoor Air Flow per Zone Floor Area',
                           'DesignSpecification:OutdoorAir,Etage:TURING Design Specification Outdoor Air Object,Outdoor Air Flow per Zone Floor Area']
                         ],
-              'num_vars': 9}
             
 
 # Setting idd file in IDF class
@@ -213,7 +217,7 @@ IDF.setiddname(idd_file)
 # Instantiate an object from the class IDF
 idf_eppy = IDF(idf_path, epw_path)
 
-sobol = SobolEppy(parameters=parameters)
+sobol = SobolEppy(parameters)
 sobol.set_idf(idf_path, epw_path, idd_file)
 
 sobol.run_models(processors = 4)

@@ -44,7 +44,7 @@ class UtilityIdf():
 
 
 
-class EppyUtilityIdf(UtilityIDF):
+class EppyUtilityIdf(UtilityIdf):
 
     # Conceret definition of the abstract method copy()
     def copy(self, idf):
