@@ -36,17 +36,12 @@ class SobolBes:
         
         for obj in self.objects:
             self.problem['names'].append(obj[0])
-        """
-        for key, value in parameters:
-            self.problem['names'].append(key)
-            self.problem['bounds'].append(value)
-        """
-     
+ 
 
         # Generate samples
-        self.X = sample(self.problem, 8)
+        self.X = sample(self.problem, 1024)
         self.Y = None
-        self.si = None
+        self.Si = None
         
     @abstractmethod
     def set_idf(self, idf_path, epw_path, idd_path):
@@ -58,11 +53,6 @@ class SobolBes:
             return: a numpy.ndarray containing the model inputs required for method of Sobol.
         """
         return self.X
-
-    def get_idf(self):
-        """
-            return: an idf object to launch energyPlus through eppy
-        """
 
     def get_names(self):
         """
@@ -76,11 +66,10 @@ class SobolBes:
     @abstractmethod
     def run_models(self, num_processors):
         """
-            run enrgyPlus models using variations based on self.X values and 
-            set self.Y values based on output of the simulations
-            param idf:  energyPlus idf object
+            run energyPlus models using variations based on self.X values and 
             param num_processors: number of processors
-            return:
+            set self.Y values based on output of the simulations
+            return: -
         """
         pass
 
@@ -90,16 +79,11 @@ class SobolBes:
         """
             param Y: A Numpy array containing the model outputs of dtype=float
             return: A dictionary of sensitivity indices containing the following entries.
-                - `mu` - the mean elementary effect
-                - `mu_star` - the absolute of the mean elementary effect
-                - `sigma` - the standard deviation of the elementary effect
-                - `mu_star_conf` - the bootstrapped confidence interval
-                - `names` - the names of the parameters
         """
         if self.Y is None:
             raise NameError('Y, evaluate is not defined. Run E+ models first')
-        self.si = analyze(self.problem, self.Y, print_to_console=True)
-        return self.si
+        self.Si = analyze(self.problem, self.Y, print_to_console=True)
+        return self.Si
     
     
 class SobolEppy(SobolBes):
@@ -236,7 +220,7 @@ def main():
     sobol.set_idf(idf_path, epw_path, idd_path)
 
     # Launching the simulations once all the idf files for each sample have been already created
-    sobol.run_models(processors = 8)
+    sobol.run_models(processors = 16)
 
     # Sensivity anlysis through Sobol method
     Si = sobol.evaluate()
