@@ -118,7 +118,7 @@ class SobolEppy(SobolBes):
         utility = EppyUtilityIdf()
         idf_list = []
         #file_dir = os.path.dirname(__file__)
-        file_dir = 'D:\Projet\Thesis\Simulations\SensivityAnalysis'
+        file_dir = 'C:\Simulations\SensivityAnalysis'
         output_folder = os.path.join(file_dir, 'SA_results')
         # removing directory where the results of the previous run are saved
         shutil.rmtree(output_folder, ignore_errors = False)
@@ -175,10 +175,10 @@ class SobolEppy(SobolBes):
 
 def main():
     # Directories to idf, idd, epw files for running EnergyPlus
-    folder_parent = 'D:\\Projet\\Thesis\\Simulations'
-    #idd_file = 'EnergyPlus\\2024\\fevrier\\Energy+.idd'
-    idf_file = 'EnergyPlus\\2024\\fevrier\\NR3_V02-24.idf'
-    epw_file = 'EnergyPlus\\2024\\fevrier\\FRA_NANTERRE_IWEC.epw'
+    folder_parent = 'C:\Simulations'
+    #idd_file = 'Simulations\\Energy+.idd'
+    idf_file = 'Simulations\\NR3_V02-24.idf'
+    epw_file = 'Simulations\\FRA_NANTERRE_IWEC.epw'
 
     idd_path = 'C:\\EnergyPlusV9-4-0\\Energy+.idd'
     #idd_path = os.path.abspath(os.path.join(folder_parent, idd_file))
