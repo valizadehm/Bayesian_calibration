@@ -44,9 +44,9 @@ class SobolBes:
      
 
         # Generate samples
-        self.X = sample(self.problem, 8)
+        self.X = sample(self.problem, 1050)
         self.Y = None
-        self.si = None
+        self.Si = None
         
     @abstractmethod
     def set_idf(self, idf_path, epw_path, idd_path):
@@ -192,62 +192,43 @@ def main():
                                 [0.05, 0.5],              
                                 [0.8, 1.0],
                                 [0.05, 1.0],
-                                [0.05, 1.0],
-                                [0.1, 0.8],
-                                [0.1, 0.8],
-                                [0.1, 0.8],
-                                [0.1, 0.8],
                                 [0.1, 0.8],
                                 [0.1, 0.9],
-                                [0.1, 0.9],
-                                [0.1, 0.9],
-                                [0.1, 0.9],
-                                [2.0, 25.0],
-                                [2.0, 25.0],
-                                [2.0, 25.0],
                                 [2.0, 25.0],
                                 [4.0, 12.0],
-                                [4.0, 12.0],
-                                [4.0, 12.0],
-                                [4.0, 12.0],
-                                [4.0, 12.0],
-                                [0.0, 0.0038],
-                                [0.0, 0.0038],
-                                [0.0, 0.0038],
                                 [0.0, 0.0038]
                         ],
                     'obj_id': [
                                 ['Material:RoofVegetation,NR3 - Vegetation_.15,Leaf_Area_Index'],
                                 ['Material:RoofVegetation,NR3 - Vegetation_.15,Leaf_Reflectivity'],
                                 ['Material:RoofVegetation,NR3 - Vegetation_.15,Leaf_Emissivity'],
-                                ['GroundHeatTransfer:Slab:Materials,ALBEDO_Surface_Albedo_No_Snow'],
-                                ['GroundHeatTransfer:Basement:SurfaceProps,ALBEDO_Surface_albedo_for_No_snow_conditions'],
-                                ['ZoneInfiltration:DesignFlowRate,RDC:HALLRDC Infiltration,Air_Changes_per_Hour'],
-                                ['ZoneInfiltration:DesignFlowRate,RDC:TESLA Infiltration,Air_Changes_per_Hour'],
-                                ['ZoneInfiltration:DesignFlowRate,RDC:LUMIERE Infiltration,Air_Changes_per_Hour'],
-                                ['ZoneInfiltration:DesignFlowRate,Etage:NOBEL Infiltration,Air_Changes_per_Hour'],
-                                ['ZoneInfiltration:DesignFlowRate,Etage:TURING Infiltration,Air_Changes_per_Hour'],
-                                ['WindowMaterial:Glazing,1225,Visible_Transmittance_at_Normal_Incidence'],
-                                ['WindowMaterial:Glazing,7776,Visible_Transmittance_at_Normal_Incidence'],
-                                ['WindowMaterial:Glazing,7968,Visible_Transmittance_at_Normal_Incidence'],
-                                ['WindowMaterial:Glazing,7985,Visible_Transmittance_at_Normal_Incidence'],
-                                ['People,People RDC:TESLA,People_per_Zone_Floor_Area'],
-                                ['People,People RDC:LUMIERE,People_per_Zone_Floor_Area'],
-                                ['People,People Etage:NOBEL,People_per_Zone_Floor_Area'],
-                                ['People,People Etage:TURING,People_per_Zone_Floor_Area'],
-                                ['OtherEquipment,RDC:LOCALTECH Miscellaneous gain,Power_per_Zone_Floor_Area'],
-                                ['OtherEquipment,RDC:TESLA Miscellaneous gain,Power_per_Zone_Floor_Area'],
-                                ['OtherEquipment,RDC:LUMIERE Miscellaneous gain,Power_per_Zone_Floor_Area'],
-                                ['OtherEquipment,Etage:LOCALSERVEURS Miscellaneous gain,Power_per_Zone_Floor_Area'],
-                                ['OtherEquipment,Etage:NOBEL Miscellaneous gain,Power_per_Zone_Floor_Area'],
-                                ['OtherEquipment,Etage:TURING Miscellaneous gain,Power_per_Zone_Floor_Area'],
-                                ['DesignSpecification:OutdoorAir,RDC:TESLA Design Specification Outdoor Air Object,Outdoor_Air_Flow_per_Zone_Floor_Area'],
-                                ['DesignSpecification:OutdoorAir,RDC:LUMIERE Design Specification Outdoor Air Object,Outdoor_Air_Flow_per_Zone_Floor_Area'],
-                                ['DesignSpecification:OutdoorAir,Etage:NOBEL Design Specification Outdoor Air Object,Outdoor_Air_Flow_per_Zone_Floor_Area'],
-                                ['DesignSpecification:OutdoorAir,Etage:TURING Design Specification Outdoor Air Object,Outdoor_Air_Flow_per_Zone_Floor_Area']
+                                ['GroundHeatTransfer:Slab:Materials,ALBEDO_Surface_Albedo_No_Snow',
+                                 'GroundHeatTransfer:Basement:SurfaceProps,ALBEDO_Surface_albedo_for_No_snow_conditions'],
+                                ['ZoneInfiltration:DesignFlowRate,RDC:HALLRDC Infiltration,Air_Changes_per_Hour',
+                                 'ZoneInfiltration:DesignFlowRate,RDC:TESLA Infiltration,Air_Changes_per_Hour',
+                                 'ZoneInfiltration:DesignFlowRate,RDC:LUMIERE Infiltration,Air_Changes_per_Hour',
+                                 'ZoneInfiltration:DesignFlowRate,Etage:NOBEL Infiltration,Air_Changes_per_Hour',
+                                 'ZoneInfiltration:DesignFlowRate,Etage:TURING Infiltration,Air_Changes_per_Hour'],
+                                ['WindowMaterial:Glazing,1225,Visible_Transmittance_at_Normal_Incidence',
+                                 'WindowMaterial:Glazing,7776,Visible_Transmittance_at_Normal_Incidence',
+                                 'WindowMaterial:Glazing,7968,Visible_Transmittance_at_Normal_Incidence',
+                                 'WindowMaterial:Glazing,7985,Visible_Transmittance_at_Normal_Incidence'],
+                                ['People,People RDC:TESLA,People_per_Zone_Floor_Area',
+                                 'People,People RDC:LUMIERE,People_per_Zone_Floor_Area',
+                                 'People,People Etage:NOBEL,People_per_Zone_Floor_Area',
+                                 'People,People Etage:TURING,People_per_Zone_Floor_Area'],
+                                ['OtherEquipment,RDC:LOCALTECH Miscellaneous gain,Power_per_Zone_Floor_Area',
+                                 'OtherEquipment,RDC:TESLA Miscellaneous gain,Power_per_Zone_Floor_Area',
+                                 'OtherEquipment,RDC:LUMIERE Miscellaneous gain,Power_per_Zone_Floor_Area',
+                                 'OtherEquipment,Etage:LOCALSERVEURS Miscellaneous gain,Power_per_Zone_Floor_Area',
+                                 'OtherEquipment,Etage:NOBEL Miscellaneous gain,Power_per_Zone_Floor_Area',
+                                 'OtherEquipment,Etage:TURING Miscellaneous gain,Power_per_Zone_Floor_Area'],
+                                ['DesignSpecification:OutdoorAir,RDC:TESLA Design Specification Outdoor Air Object,Outdoor_Air_Flow_per_Zone_Floor_Area',
+                                 'DesignSpecification:OutdoorAir,RDC:LUMIERE Design Specification Outdoor Air Object,Outdoor_Air_Flow_per_Zone_Floor_Area',
+                                 'DesignSpecification:OutdoorAir,Etage:NOBEL Design Specification Outdoor Air Object,Outdoor_Air_Flow_per_Zone_Floor_Area',
+                                 'DesignSpecification:OutdoorAir,Etage:TURING Design Specification Outdoor Air Object,Outdoor_Air_Flow_per_Zone_Floor_Area']
                             ]
                 }
-
     
     # Instantiate an object from the class SobolEppy
     sobol = SobolEppy(parameters)
