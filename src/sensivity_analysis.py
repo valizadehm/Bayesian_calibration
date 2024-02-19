@@ -1,5 +1,6 @@
 import os
 import shutil
+import time
 import numpy as np
 from abc import abstractmethod
 from SALib.sample.sobol import sample
@@ -8,11 +9,12 @@ from eppy.runner.run_functions import runIDFs
 from eppy.modeleditor import IDF
 from eppy.results import readhtml
 from idf_functions import EppyUtilityIdf
+from jinja2 import Environment, FileSystemLoader
 
 
 class SobolBes:
-    
-    def __init__(self, parameters):
+    """Constructor of the class"""
+    def __init__(self, parameters, num_initial_samples):
 
         """
             parameters: a dictionary type data structure containing uncertain parameters for the sensitivity analysis
@@ -30,21 +32,24 @@ class SobolBes:
         
         # Define the model inputs
         self.idf = None
+        self.num_initial_samples = num_initial_samples
         self.problem = {'num_vars': len(parameters['bounds']), 'names': [], 'bounds': []}
         self.problem['bounds'] = parameters['bounds']
-        self.objects = parameters['obj_id']
-        
+        self.problem['names'] = parameters['obj_id']        
+        #self.objects = parameters['obj_id']
+
+        """
         for obj in self.objects:
             self.problem['names'].append(obj[0])
+        """
         """
         for key, value in parameters:
             self.problem['names'].append(key)
             self.problem['bounds'].append(value)
         """
      
-
         # Generate samples
-        self.X = sample(self.problem, 1050)
+        self.X = sample(self.problem, self.num_initial_samples)
         self.Y = None
         self.Si = None
         
@@ -72,51 +77,59 @@ class SobolBes:
         return self.problem['names']
 
 
-    # Run model
     @abstractmethod
     def run_models(self, num_processors):
         """
-            run enrgyPlus models using variations based on self.X values and 
+            Run model
+            run energyPlus models using variations based on self.X values and 
             set self.Y values based on output of the simulations
             param idf:  energyPlus idf object
             param num_processors: number of processors
-            return:
+            return: -
         """
         pass
 
 
-    # Perform analysis
     def evaluate(self):
         """
+            Perform analysis
             param Y: A Numpy array containing the model outputs of dtype=float
             return: A dictionary of sensitivity indices containing the following entries.
-                - `mu` - the mean elementary effect
-                - `mu_star` - the absolute of the mean elementary effect
-                - `sigma` - the standard deviation of the elementary effect
-                - `mu_star_conf` - the bootstrapped confidence interval
+                - `Si` - the single effect of each parameter
+                - `ST` - The total eefect of each parameter
                 - `names` - the names of the parameters
         """
         if self.Y is None:
             raise NameError('Y, evaluate is not defined. Run E+ models first')
-        self.si = analyze(self.problem, self.Y, print_to_console=True)
+        self.Si = analyze(self.problem, self.Y, print_to_console=True)
         return self.si
     
     
 class SobolEppy(SobolBes):
-
-    # Concret definition of the abstract method set_idf()
-    def set_idf(self, idf_path, epw_path, idd_path):
-        # Setting idd file in IDF class
-        IDF.setiddname(idd_path)
-        # Instantiate an object from the class IDF with the original idf file
-        self.idf = IDF(idf_path, epw_path)
+    """Class Sobol in which methods are defined to run all the samples in E+ using eppy library"""
+    
+    def make_eplaunch_options(self, idf):
+        """Make options for run, so that it runs like EPLaunch on Windows"""
+        idfversion = idf.idfobjects['version'][0].Version_Identifier.split('.')
+        idfversion.extend([0] * (3 - len(idfversion)))
+        idfversionstr = '-'.join([str(item) for item in idfversion])
+        options = {
+                            'ep_version': '9-4-0', # runIDFs needs the version number
+                            'output_prefix':os.path.basename(idf.idfname).split('.')[0],
+                            'output_suffix': 'C',
+                            'output_directory': os.path.dirname(idf.idfname),
+                            'readvars':True,
+                            'expandobjects':True
+                }
+        return options
 
     # Concret definition of the abstract method run_models()
     def run_models(self, processors):
-        if self.idf is None:
-            raise TypeError('idf file has NOT  been set')
-        utility = EppyUtilityIdf()
-        idf_list = []
+        #if self.idf is None:
+        #    raise TypeError('idf file has NOT  been set')
+        #utility = EppyUtilityIdf()
+        idfs_list = []
+
         #file_dir = os.path.dirname(__file__)
         file_dir = 'D:\Projet\Thesis\Simulations\SensivityAnalysis'
         output_folder = os.path.join(file_dir, 'SA_results')
@@ -124,35 +137,39 @@ class SobolEppy(SobolBes):
         shutil.rmtree(output_folder, ignore_errors = False)
         os.mkdir(output_folder)
 
-        for i, values in enumerate(self.X):   #each sample
-            idf_temp = utility.copy(self.idf)
-            for j, value in enumerate(values):
-                for obj in self.objects[j]:
-                    if len(obj.split(',')) == 3:
-                        obj_id, obj_name, field = obj.split(',')
-                    else:
-                        obj_id, field = obj.split(',')
-                        obj_name = None
-                    utility.idf_handle(idf_temp, obj_id, obj_name, field, value)
-            idf_temp.idfabsname = os.path.join(output_folder, 'run-{}.idf'.format(i))
-            idf_temp.save()
+        folder_parent = 'D:\\Projet\\Thesis\\Simulations'
+        epw_file = 'EnergyPlus\\2024\\fevrier2024\\FRA_NANTERRE_IWEC.epw'
+        epw_path = os.path.abspath(os.path.join(folder_parent, epw_file))
 
-            # Make options for run, so that it runs like EPLaunch on Windows
-            # idfversion = idf_temp.idfobjects['version'][0].Version_Identifier.split('.')
-            # idfversion.extend([0] * (3 - len(idfversion)))
-            # idfversionstr = '-'.join([str(item) for item in idfversion])
-            options = {
-                        'ep_version': '9-4-0', # runIDFs needs the version number
-                        'output_prefix': 'run-{}'.format(i),
-                        'output_suffix': 'C',
-                        'output_directory': os.path.dirname(idf_temp.idfabsname),
-                        'readvars':True,
-                        'expandobjects':True
-                }
-            idf_list.append([idf_temp, options])
+        # Using Jinja2 templating to overwrite all the targeted parameters in the *.idf file
+        environment = Environment(loader=FileSystemLoader("D:\\Projet\\Thesis\\Simulations\\\SensivityAnalysis\\"))
+        template = environment.get_template("NR3_V02-24_template.idf")
+        
+        
+        for i, values in enumerate(self.X):
+            # making dictionary of all parameters which are substituted in the original idf file
+            parameters_dic = {}
+            for j in range(self.problem['num_vars']):
+                parameters_dic[self.problem['names'][j]] = values[j]
+
+            
+            filename = f"run-{i}.idf"
+            content = template.render(parameters_dic)
+            #path = r'D:\Projet\Thesis\Simulations\SensivityAnalysis'
+            with open(os.path.join(output_folder, filename), mode="w", encoding="utf-8") as sampled_idf:
+                sampled_idf.write(content)
+
+            idf_path = os.path.join(output_folder, f"run-{i}.idf")
+  
+            idfs_list.append(idf_path)
+
+        # Generator for generating idf objects of the class IDF
+        idf_objects = (IDF(idf, epw_path) for idf in idfs_list)
+        runs = ((idf, self.make_eplaunch_options(idf)) for idf in idf_objects)
 
         # runIDFs needs the version number while idf.run does not need the above arg
-        runIDFs(idf_list, processors)
+        runIDFs(runs, processors)
+
         # retrieve E+ outputs after simulation have been done
         num_samples = self.X.shape[0]
         self.Y = np.zeros(num_samples)
@@ -166,79 +183,63 @@ class SobolEppy(SobolBes):
             html_doc = open(output_file, 'r').read()
             htables = readhtml.titletable(html_doc) # reads the tables with their titles
 
-            total_site_energy = utility.get_output(htables, ['Site and Source Energy', 'Total Site Energy'])
-            total_site_energy_per_area = total_site_energy[1]
+            #total_site_energy = utility.get_output(htables, ['Site and Source Energy', 'Total Site Energy'])
+            #total_site_energy_per_area = total_site_energy[1]
+            total_site_energy_per_area = htables[0][1][2][1]
             self.Y[k] = total_site_energy_per_area
 
 
-
-
 def main():
-    # Directories to idf, idd, epw files for running EnergyPlus
-    folder_parent = 'D:\\Projet\\Thesis\\Simulations'
-    #idd_file = 'EnergyPlus\\2024\\fevrier\\Energy+.idd'
-    idf_file = 'EnergyPlus\\2024\\fevrier\\NR3_V02-24.idf'
-    epw_file = 'EnergyPlus\\2024\\fevrier\\FRA_NANTERRE_IWEC.epw'
+    # Get the total number of initial samples for Sobol Sensivity Analysis
+    num_initial_samples = int(input("Enter the total number of samples as a multiplication of 2:"))
+    start_time = time.time()
 
+    # Directories to idd file for running EnergyPlus
     idd_path = 'C:\\EnergyPlusV9-4-0\\Energy+.idd'
     #idd_path = os.path.abspath(os.path.join(folder_parent, idd_file))
-    idf_path = os.path.abspath(os.path.join(folder_parent, idf_file))
-    epw_path = os.path.abspath(os.path.join(folder_parent, epw_file))
 
-    # Parameters for sensivity analysis: bounds, the id of each object in EnergyPlus and the number of parameters
+    # Parameters for sensivity analysis: bounds, the id of each object in EnergyPlus and 
+    # the number of parameters
     parameters = {
-                    'bounds': [
-                                [1.0, 5.0],
-                                [0.05, 0.5],              
-                                [0.8, 1.0],
-                                [0.05, 1.0],
-                                [0.1, 0.8],
-                                [0.1, 0.9],
-                                [2.0, 25.0],
-                                [4.0, 12.0],
-                                [0.0, 0.0038]
-                        ],
-                    'obj_id': [
-                                ['Material:RoofVegetation,NR3 - Vegetation_.15,Leaf_Area_Index'],
-                                ['Material:RoofVegetation,NR3 - Vegetation_.15,Leaf_Reflectivity'],
-                                ['Material:RoofVegetation,NR3 - Vegetation_.15,Leaf_Emissivity'],
-                                ['GroundHeatTransfer:Slab:Materials,ALBEDO_Surface_Albedo_No_Snow',
-                                 'GroundHeatTransfer:Basement:SurfaceProps,ALBEDO_Surface_albedo_for_No_snow_conditions'],
-                                ['ZoneInfiltration:DesignFlowRate,RDC:HALLRDC Infiltration,Air_Changes_per_Hour',
-                                 'ZoneInfiltration:DesignFlowRate,RDC:TESLA Infiltration,Air_Changes_per_Hour',
-                                 'ZoneInfiltration:DesignFlowRate,RDC:LUMIERE Infiltration,Air_Changes_per_Hour',
-                                 'ZoneInfiltration:DesignFlowRate,Etage:NOBEL Infiltration,Air_Changes_per_Hour',
-                                 'ZoneInfiltration:DesignFlowRate,Etage:TURING Infiltration,Air_Changes_per_Hour'],
-                                ['WindowMaterial:Glazing,1225,Visible_Transmittance_at_Normal_Incidence',
-                                 'WindowMaterial:Glazing,7776,Visible_Transmittance_at_Normal_Incidence',
-                                 'WindowMaterial:Glazing,7968,Visible_Transmittance_at_Normal_Incidence',
-                                 'WindowMaterial:Glazing,7985,Visible_Transmittance_at_Normal_Incidence'],
-                                ['People,People RDC:TESLA,People_per_Zone_Floor_Area',
-                                 'People,People RDC:LUMIERE,People_per_Zone_Floor_Area',
-                                 'People,People Etage:NOBEL,People_per_Zone_Floor_Area',
-                                 'People,People Etage:TURING,People_per_Zone_Floor_Area'],
-                                ['OtherEquipment,RDC:LOCALTECH Miscellaneous gain,Power_per_Zone_Floor_Area',
-                                 'OtherEquipment,RDC:TESLA Miscellaneous gain,Power_per_Zone_Floor_Area',
-                                 'OtherEquipment,RDC:LUMIERE Miscellaneous gain,Power_per_Zone_Floor_Area',
-                                 'OtherEquipment,Etage:LOCALSERVEURS Miscellaneous gain,Power_per_Zone_Floor_Area',
-                                 'OtherEquipment,Etage:NOBEL Miscellaneous gain,Power_per_Zone_Floor_Area',
-                                 'OtherEquipment,Etage:TURING Miscellaneous gain,Power_per_Zone_Floor_Area'],
-                                ['DesignSpecification:OutdoorAir,RDC:TESLA Design Specification Outdoor Air Object,Outdoor_Air_Flow_per_Zone_Floor_Area',
-                                 'DesignSpecification:OutdoorAir,RDC:LUMIERE Design Specification Outdoor Air Object,Outdoor_Air_Flow_per_Zone_Floor_Area',
-                                 'DesignSpecification:OutdoorAir,Etage:NOBEL Design Specification Outdoor Air Object,Outdoor_Air_Flow_per_Zone_Floor_Area',
-                                 'DesignSpecification:OutdoorAir,Etage:TURING Design Specification Outdoor Air Object,Outdoor_Air_Flow_per_Zone_Floor_Area']
-                            ]
-                }
+                'bounds': [
+                            [1.0, 5.0],
+                            [0.05, 0.5],              
+                            [0.8, 1.0],
+                            [0.05, 1.0],
+                            [0.1, 0.8],
+                            [0.1, 0.9],
+                            [2.0, 25.0],
+                            [4.0, 12.0],
+                            [0.0, 0.0038]
+                    ],
+                'obj_id': [
+                            'Leaf_Area_Index',
+                            'Leaf_Reflectivity',
+                            'Leaf_Emissivity',
+                            'Albedo',
+                            'Infiltration',
+                            'Visible_Transmittance',
+                            'People_density',
+                            'Power_density',
+                            'Mechanical_ventilation'
+                        ]
+            }
     
-    # Instantiate an object from the class SobolEppy
-    sobol = SobolEppy(parameters)
-    sobol.set_idf(idf_path, epw_path, idd_path)
+    #Instantiate an object from the class SobolEppy
+    sobol = SobolEppy(parameters, num_initial_samples)
 
-    # Launching the simulations once all the idf files for each sample have been already created
-    sobol.run_models(processors = 8)
+    # Setting idd file in IDF class
+    IDF.setiddname(idd_path)
 
-    # Sensivity anlysis through Sobol method
+    #Launching the simulations once all the idf files for each sample have been already created
+    sobol.run_models(processors = 16)
+
+    #Sensivity anlysis through Sobol method
     Si = sobol.evaluate()
 
+    end_time = time.time()
+    #**************************************************************************************************
+    print("It took {} seconds to run the code with {} samples.".format((start_time - end_time), num_initial_samples))    
+    #**************************************************************************************************
 if __name__ == '__main__':
     main()
