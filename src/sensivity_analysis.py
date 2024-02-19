@@ -36,18 +36,7 @@ class SobolBes:
         self.problem = {'num_vars': len(parameters['bounds']), 'names': [], 'bounds': []}
         self.problem['bounds'] = parameters['bounds']
         self.problem['names'] = parameters['obj_id']        
-        #self.objects = parameters['obj_id']
 
-        """
-        for obj in self.objects:
-            self.problem['names'].append(obj[0])
-        """
-        """
-        for key, value in parameters:
-            self.problem['names'].append(key)
-            self.problem['bounds'].append(value)
-        """
-     
         # Generate samples
         self.X = sample(self.problem, self.num_initial_samples)
         self.Y = None
@@ -63,11 +52,6 @@ class SobolBes:
             return: a numpy.ndarray containing the model inputs required for method of Sobol.
         """
         return self.X
-
-    def get_idf(self):
-        """
-            return: an idf object to launch energyPlus through eppy
-        """
 
     def get_names(self):
         """
@@ -102,7 +86,8 @@ class SobolBes:
         if self.Y is None:
             raise NameError('Y, evaluate is not defined. Run E+ models first')
         self.Si = analyze(self.problem, self.Y, print_to_console=True)
-        return self.si
+        return self.Si
+
     
     
 class SobolEppy(SobolBes):
@@ -131,7 +116,7 @@ class SobolEppy(SobolBes):
         idfs_list = []
 
         #file_dir = os.path.dirname(__file__)
-        file_dir = 'D:\Projet\Thesis\Simulations\SensivityAnalysis'
+        file_dir = 'C:\\Simulations\\SensivityAnalysis'
         output_folder = os.path.join(file_dir, 'SA_results')
         # removing directory where the results of the previous run are saved
         shutil.rmtree(output_folder, ignore_errors = False)
@@ -203,7 +188,7 @@ def main():
     parameters = {
                 'bounds': [
                             [1.0, 5.0],
-                            [0.05, 0.5],              
+                            [0.05, 0.4],              
                             [0.8, 1.0],
                             [0.05, 1.0],
                             [0.1, 0.8],
