@@ -74,7 +74,7 @@ class SobolBes:
         pass
 
 
-    def evaluate(self):
+    def evaluate(self, processors):
         """
             Perform analysis
             param Y: A Numpy array containing the model outputs of dtype=float
@@ -85,10 +85,10 @@ class SobolBes:
         """
         if self.Y is None:
             raise NameError('Y, evaluate is not defined. Run E+ models first')
-        self.Si = analyze(self.problem, self.Y, print_to_console=True)
+        self.Si = analyze(self.problem, self.Y, print_to_console=True, parallel=True, 
+                          keep_resamples=True, n_processors=processors, seed=2024)
         return self.Si
-
-    
+  
     
 class SobolEppy(SobolBes):
     """Class Sobol in which methods are defined to run all the samples in E+ using eppy library"""
@@ -101,7 +101,7 @@ class SobolEppy(SobolBes):
         options = {
                             'ep_version': '9-4-0', # runIDFs needs the version number
                             'output_prefix':os.path.basename(idf.idfname).split('.')[0],
-                            'output_suffix': 'C',
+                            'output_suffix': 'D',
                             'output_directory': os.path.dirname(idf.idfname),
                             'readvars':True,
                             'expandobjects':True
@@ -114,7 +114,7 @@ class SobolEppy(SobolBes):
         idfs_list = []
 
         #file_dir = os.path.dirname(__file__)
-        file_dir = 'C:\\Simulations\\SensivityAnalysis'
+        file_dir = 'D:\\Projet\\Thesis\\Simulations\\SensivityAnalysis'
         output_folder = os.path.join(file_dir, 'SA_results')
         # removing directory where the results of the previous run are saved
         shutil.rmtree(output_folder, ignore_errors = False)
@@ -125,7 +125,7 @@ class SobolEppy(SobolBes):
         epw_path = os.path.abspath(os.path.join(folder_parent, epw_file))
 
         # Using Jinja2 templating to overwrite all the targeted parameters in the *.idf file
-        environment = Environment(loader=FileSystemLoader("D:\\Projet\\Thesis\\Simulations\\\SensivityAnalysis\\"))
+        environment = Environment(loader=FileSystemLoader("D:\\Projet\\Thesis\\Simulations\\SensivityAnalysis\\"))
         template = environment.get_template("NR3_V02-24_template.idf")
         
         
@@ -158,7 +158,7 @@ class SobolEppy(SobolBes):
 
 
         for k in range(num_samples):
-            output_file = os.path.join(output_folder, 'run-{}Table.htm'.format(k))
+            output_file = os.path.join(output_folder, 'run-{}-table.htm'.format(k))
             
             #with open(output_file, "r", encoding='ISO-8859-1') as f:
             #    results_table = readhtml.titletable(f.read)
@@ -219,7 +219,7 @@ def main():
     sobol.run_models(processors = 16)
 
     #Sensivity anlysis through Sobol method
-    Si = sobol.evaluate()
+    Si = sobol.evaluate(processors = 16)
 
     end_time = time.time()
     #**************************************************************************************************
