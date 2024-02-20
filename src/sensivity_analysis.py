@@ -108,11 +108,9 @@ class SobolEppy(SobolBes):
                 }
         return options
 
-    # Concret definition of the abstract method run_models()
     def run_models(self, processors):
-        #if self.idf is None:
-        #    raise TypeError('idf file has NOT  been set')
-        #utility = EppyUtilityIdf()
+        """ Concret definition of the abstract method run_models() """
+
         idfs_list = []
 
         #file_dir = os.path.dirname(__file__)
@@ -140,7 +138,6 @@ class SobolEppy(SobolBes):
             
             filename = f"run-{i}.idf"
             content = template.render(parameters_dic)
-            #path = r'D:\Projet\Thesis\Simulations\SensivityAnalysis'
             with open(os.path.join(output_folder, filename), mode="w", encoding="utf-8") as sampled_idf:
                 sampled_idf.write(content)
 
@@ -175,6 +172,8 @@ class SobolEppy(SobolBes):
 
 
 def main():
+    """main function"""
+
     # Get the total number of initial samples for Sobol Sensivity Analysis
     num_initial_samples = int(input("Enter the total number of samples as a multiplication of 2:"))
     start_time = time.time()
@@ -226,5 +225,6 @@ def main():
     #**************************************************************************************************
     print("It took {} seconds to run the code with {} samples.".format((start_time - end_time), num_initial_samples))    
     #**************************************************************************************************
+
 if __name__ == '__main__':
     main()
