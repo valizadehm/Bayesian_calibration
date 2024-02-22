@@ -8,7 +8,6 @@ from SALib.analyze.sobol import analyze
 from eppy.runner.run_functions import runIDFs
 from eppy.modeleditor import IDF
 from eppy.results import readhtml
-from idf_functions import EppyUtilityIdf
 from jinja2 import Environment, FileSystemLoader
 
 
@@ -217,14 +216,20 @@ def main():
 
     #Launching the simulations once all the idf files for each sample have been already created
     sobol.run_models(processors = 16)
+    end_time = time.time()
+    #****************************************************************************************************************
+    print("It took {} seconds to run all the {} E+ simulations.".format((start_time - end_time), 
+                                         2*num_initial_samples*(len(parameters['bounds']) + 1)))    
+    #****************************************************************************************************************
 
+    start_time = time.time()
     #Sensivity anlysis through Sobol method
     Si = sobol.evaluate(processors = 16)
-
     end_time = time.time()
-    #**************************************************************************************************
-    print("It took {} seconds to run the code with {} samples.".format((start_time - end_time), num_initial_samples))    
-    #**************************************************************************************************
+    #****************************************************************************************************************
+    print("It took {} seconds to run the code with {} samples.".format((start_time - end_time),
+                                        2*num_initial_samples*(len(parameters['bounds']) + 1)))    
+    #****************************************************************************************************************
 
 if __name__ == '__main__':
     main()
