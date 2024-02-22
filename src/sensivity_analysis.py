@@ -114,7 +114,7 @@ class SobolEppy(SobolBes):
 
         #file_dir = os.path.dirname(__file__)
         file_dir = 'D:\\Projet\\Thesis\\Simulations\\SensivityAnalysis'
-        output_folder = os.path.join(file_dir, 'SA_results')
+        output_folder = os.path.join(file_dir, 'real_time_results')
         # removing directory where the results of the previous run are saved
         shutil.rmtree(output_folder, ignore_errors = False)
         os.mkdir(output_folder)
@@ -159,15 +159,15 @@ class SobolEppy(SobolBes):
         for k in range(num_samples):
             output_file = os.path.join(output_folder, 'run-{}-table.htm'.format(k))
             
-            #with open(output_file, "r", encoding='ISO-8859-1') as f:
-            #    results_table = readhtml.titletable(f.read)
+
+            # Access to output summary table
             html_doc = open(output_file, 'r').read()
             htables = readhtml.titletable(html_doc) # reads the tables with their titles
-
-            #total_site_energy = utility.get_output(htables, ['Site and Source Energy', 'Total Site Energy'])
-            #total_site_energy_per_area = total_site_energy[1]
-            total_site_energy_per_area = htables[0][1][2][1]
-            self.Y[k] = total_site_energy_per_area
+    
+            # heating
+            Y[k] = htables[3][1][1][1]
+            #total_site_energy_per_area
+            #Y[k] = htables[0][1][2][1]
 
 
 def main():

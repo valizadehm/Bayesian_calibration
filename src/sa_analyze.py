@@ -27,19 +27,19 @@ problem = {
 
 Y = np.zeros(2560)
 
-output_folder = 'D:\\Projet\\Thesis\\Simulations\\SensivityAnalysis\\SA_results'
+output_folder = 'D:\\Projet\\Thesis\\Simulations\\SensivityAnalysis\\real_time_results'
 for k in range(2560):
-    output_file = os.path.join(output_folder, 'run-{}Table.htm'.format(k))
+    output_file = os.path.join(output_folder, 'run-{}-table.htm'.format(k))
     
-    #with open(output_file, "r", encoding='ISO-8859-1') as f:
-    #    results_table = readhtml.titletable(f.read)
+
+    # Access to output summary table
     html_doc = open(output_file, 'r').read()
     htables = readhtml.titletable(html_doc) # reads the tables with their titles
 
-    #total_site_energy = utility.get_output(htables, ['Site and Source Energy', 'Total Site Energy'])
-    #total_site_energy_per_area = total_site_energy[1]
-    total_site_energy_per_area = htables[0][1][2][1]
-    Y[k] = total_site_energy_per_area
+    # heating
+    Y[k] = htables[3][1][1][1]
+    #total_site_energy_per_area
+    #Y[k] = htables[0][1][2][1]
 
 
 Si = analyze(problem, Y, print_to_console=True, parallel=True, keep_resamples=True, n_processors=16, seed=2024)
