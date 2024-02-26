@@ -4,7 +4,6 @@ import shutil
 import numpy as np
 from eppy.runner.run_functions import runIDFs
 from eppy.modeleditor import IDF
-from eppy.results import readhtml
 from jinja2 import Environment, FileSystemLoader
 
 class EplusPy:
@@ -13,7 +12,6 @@ class EplusPy:
     def __init__(self, problem, X):
         self.problem = problem
         self.X = X
-        self.Y = np.zeros(self.X.shape[0])
      
 
     def make_eplaunch_options(self, idf):
@@ -41,8 +39,8 @@ class EplusPy:
         idfs_list = []
 
         #file_dir = os.path.dirname(__file__)
-        file_dir = 'D:\\Projet\\Thesis\\Simulations\\SensivityAnalysis'
-        output_folder = os.path.join(file_dir, 'real_time_results')
+        parent_dir = 'D:\\Projet\\Thesis\\Simulations\\SensivityAnalysis'
+        output_folder = os.path.join(parent_dir, 'real_time_results')
         # removing directory where the results of the previous run are saved
         shutil.rmtree(output_folder, ignore_errors = False)
         os.mkdir(output_folder)
@@ -87,29 +85,6 @@ class EplusPy:
         #  runIDFs needs the version number while idf.run does not need the above arg
         runIDFs(runs, processors)
 
-    
-    def reading_results(self):
-        """retrieve E+ outputs after simulation have been done"""
-
-        #file_dir = os.path.dirname(__file__)
-        file_dir = 'D:\\Projet\\Thesis\\Simulations\\SensivityAnalysis'
-        output_folder = os.path.join(file_dir, 'real_time_results')
-        
-        for i in range(len(self.Y)):
-
-            output_file = os.path.join(output_folder, 'run-{}-table.htm'.format(i))
-            
-            # Access to output summary table
-            html_doc = open(output_file, 'r').read()
-            htables = readhtml.titletable(html_doc) # reads the tables with their titles
-    
-            # [table_index][0: table_title, 1: table_content][row_index][column_index]
-            # heating
-            # self.Y[i] = htables[3][1][1][1]
-            #total_site_energy_per_area
-            self.Y[i] = htables[0][1][2][1]
-
-        return self.Y
 
 
 
