@@ -71,11 +71,15 @@ class SenAna:
             html_doc = open(output_file, 'r').read()
             htables = readhtml.titletable(html_doc) # reads the tables with their titles
     
-            # [table_index][0: table_title, 1: table_content][row_index][column_index]
-            # heating
+            # [table_index][0: table_title, 1: table_content][row_index][column_index]          
+            # Time Not Comfortable Based on Simple ASHRAE 55-2004
+            # self.Y[i] = htables[11][1][3][1]
+            # Cooling
+            # self.Y[i] = htables[3][1][2][1]
+            # Heating
             # self.Y[i] = htables[3][1][1][1]
-            #total_site_energy_per_area
-            self.Y[i] = htables[0][1][2][1]
+            # Energy Per Total Building Area [kWh/m2]
+            self.Y[i] = htables[0][1][2][2]
 
         return self.Y
     
