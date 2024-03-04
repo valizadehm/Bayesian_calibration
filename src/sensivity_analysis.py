@@ -29,7 +29,8 @@ class SenAna:
                                [lower bound, upper bound],
                                [lower bound, upper bound],
                                ...
-                              ]
+                              ],
+                    'dists': ['unif', 'lognorm', 'triang', 'norm', 'truncnorm', ...]
                 }
         """
         
@@ -58,14 +59,12 @@ class SenAna:
         return self.problem['names']
 
     
-    def reading_results(self):
+    def read_results(self):
         """
             retrieve E+ outputs after simulation have been done
         """
     
-        #file_dir = os.path.dirname(__file__)
-        parent_dir = 'D:\Projet\Thesis\Simulations\SensivityAnalysis'
-        output_folder = os.path.join(parent_dir, 'real_time_results')
+        output_folder = os.path.join(os.path.abspath('./'), 'simulation\\real_time_results')
         
         for i in range(len(self.Y)):
 
@@ -84,7 +83,8 @@ class SenAna:
             # self.Y[i] = htables[3][1][1][1]
             # Energy Per Total Building Area [kWh/m2]
             self.Y[i] = htables[0][1][2][2]
-        
+
+       
     
     def read_html_tables(self, filename):
         """
@@ -96,25 +96,25 @@ class SenAna:
         return htables[0][1][2][2]
     
     
-    def read_results(self):
+    def read_results_in_parallel(self, num_processors):
         """
             Profiting the parallel processing through Pool to read all the html summary reports
             first filling out a list of all the html files in a list and then share it by pool between processors
         """
         master_list = []
-        #file_dir = os.path.dirname(__file__)
-        parent_dir = 'D:\\Projet\\Thesis\\Simulations\\SensivityAnalysis'
-        output_folder = os.path.join(parent_dir, 'real_time_results')
+        # Getting the currently running script file (main.py)
+        # file_dir = os.path.dirname(__file__)
+        output_folder = os.path.join(os.path.abspath('./'), 'simulation\\real_time_results')
         for i in range(len(self.Y)):
             output_file = os.path.join(output_folder, 'run-{}-table.htm'.format(i))
             master_list.append(output_file)
    
-        pool = Pool(4)
+        pool = Pool(processes=num_processors)
         self.Y = np.array(pool.map(self.read_html_tables, master_list))
 
     
 
-    def evaluate(self, processors):
+    def evaluate(self, num_processors):
         """
             Perform analysis
             param Y: A Numpy array containing the model outputs of dtype=float
@@ -123,37 +123,37 @@ class SenAna:
                 - `ST` - The total eefect of each parameter
                 - `names` - the names of the parameters
         """
-        
+
         # Inititiating an object from class Eppy to run the energyPlus models for all samples 
         # and obtain parameter Y
         eplus = eppy_utility.EplusPy(self.problem, self.X)
         
         start_time = time()
-        eplus.run_models(processors)
+        eplus.run_models(num_processors)
         duration = time() - start_time
-        print("§"*90)
+        print("§"*100)
         print("It took {} seconds ({} hours) to run all the {} E+ simulations.".format(duration, duration/3600,
                                                     2*self.num_initial_samples*(self.problem['num_vars'] + 1)))    
-        print("§"*90)
-        
+        print("§"*100)
+
         # read the output target in the all summary reports
         start_time = time()
-        #self.reading_results()
-        self.read_results()
+        # self.read_results()
+        self.read_results_in_parallel(num_processors)
      
         duration = time() - start_time
         print("It took {} seconds ({} hours) to read all the {} tables of" 
               " E+ model evaluations.".format(duration, duration/3600,
               2*self.num_initial_samples*(self.problem['num_vars'] + 1)))    
-        print("§"*90)
+        print("§"*100)
         
-        # Running the analysis phase
+        # Running the analysis phase which is the last one
         start_time = time()
         self.Si = analyze(self.problem, self.Y, print_to_console=True, parallel=True, 
-                          keep_resamples=True, n_processors=processors, seed=2024) 
+                          keep_resamples=True, n_processors=num_processors, seed=2024) 
         
         duration = time() - start_time
-        print("§"*90)
+        print("§"*100)
         print("It took {} seconds ({} hours) to conduct analysis of sensivity.".format(duration, duration/3600))   
         
         return self.Si

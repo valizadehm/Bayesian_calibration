@@ -1,8 +1,4 @@
 # iIgnore entire directory of virtual environment with all its contents (it needs to include the name of the directory with the slash "/" at the end)
 .venv/
-<<<<<<< HEAD
 multi_runs/
-=======
-# ignoring parallel processing
-multi_runs
->>>>>>> 60af8dda00fedcdfdc3f9e227933773fddfd2f33
+simulation/

@@ -16,9 +16,6 @@ class EplusPy:
 
     def make_eplaunch_options(self, idf):
         """Make options for run, so that it runs like EPLaunch on Windows"""
-        #idfversion = idf.idfobjects['version'][0].Version_Identifier.split('.')
-        #idfversion.extend([0] * (3 - len(idfversion)))
-        #idfversionstr = '-'.join([str(item) for item in idfversion])
         options = {
                             'ep_version': '9-4-0', # runIDFs needs the version number
                             'output_prefix':os.path.basename(idf.idfname).split('.')[0],
@@ -29,7 +26,7 @@ class EplusPy:
                 }
         return options
 
-    def run_models(self, processors):
+    def run_models(self, num_processors):
         """ 
             Run energyPlus models using variations based on self.X values
             param num_processors: number of processors
@@ -38,26 +35,23 @@ class EplusPy:
 
         idfs_list = []
 
-        #file_dir = os.path.dirname(__file__)
-        parent_dir = 'D:\\Projet\\Thesis\\Simulations\\SensivityAnalysis'
-        output_folder = os.path.join(parent_dir, 'real_time_results')
-        # removing directory where the results of the previous run are saved
-        shutil.rmtree(output_folder, ignore_errors = False)
+        output_folder = os.path.join(os.path.abspath('./'), 'simulation\\real_time_results')
+        # If the output directory exists, it is to delete the directory where the results of the previous run
+        # had saved and then it is to create a new one
+        if os.path.exists(output_folder) == True:
+            shutil.rmtree(output_folder, ignore_errors = False)
         os.mkdir(output_folder)
 
         # Setting up the weather *.epw file 
-        folder_parent = 'D:\\Projet\\Thesis\\Simulations'
-        epw_file = 'EnergyPlus\\2024\\fevrier2024\\FRA_NANTERRE_IWEC.epw'
-        epw_path = os.path.abspath(os.path.join(folder_parent, epw_file))
+        epw_path = os.path.join(os.path.abspath('./'), 'simulation\\FRA_NANTERRE_IWEC.epw')
 
         # Directories to idd file for running EnergyPlus
         idd_path = 'C:\\EnergyPlusV9-4-0\\Energy+.idd'
-        #idd_path = os.path.abspath(os.path.join(folder_parent, idd_file))
         # Setting idd file in IDF class
         IDF.setiddname(idd_path)        
         
         # Using Jinja2 templating to overwrite all the targeted parameters in the *.idf file
-        environment = Environment(loader=FileSystemLoader("D:\\Projet\\Thesis\\Simulations\\SensivityAnalysis\\"))
+        environment = Environment(loader=FileSystemLoader(os.path.join(os.path.abspath('./'), 'simulation\\')))
         template = environment.get_template("NR3_V02-24_template.idf")
         
         
@@ -83,7 +77,7 @@ class EplusPy:
 
         #  Launching the simulations once all the *.idf files for each sample have been already created
         #  runIDFs needs the version number while idf.run does not need the above arg
-        runIDFs(runs, processors)
+        runIDFs(runs, num_processors)
 
 
 
