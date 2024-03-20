@@ -82,7 +82,9 @@ class SenAna:
             # Heating
             # self.Y[i] = htables[3][1][1][1]
             # Energy Per Total Building Area [kWh/m2]
-            self.Y[i] = htables[0][1][2][2]
+            # self.Y[i] = htables[0][1][2][2]
+            # OccupantComfortDataSummaryMonthly_ For: PEOPLE RDC:TESLA
+            self.Y[i] = htables[75][-1][14][4]
 
        
     
@@ -92,8 +94,8 @@ class SenAna:
         """
         html_doc = open(filename, 'r').read()  # file handle
         htables = readhtml.titletable(html_doc) # reads the tables with their titles
-        # Energy Per Total Building Area [kWh/m2]
-        return htables[0][1][2][2]
+        # Heating
+        return htables[3][1][1][1]
     
     
     def read_results_in_parallel(self, num_processors):

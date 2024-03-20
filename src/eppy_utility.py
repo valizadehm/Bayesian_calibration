@@ -52,7 +52,7 @@ class EplusPy:
         
         # Using Jinja2 templating to overwrite all the targeted parameters in the *.idf file
         environment = Environment(loader=FileSystemLoader(os.path.join(os.path.abspath('./'), 'simulation\\')))
-        template = environment.get_template("NR3_V02-24_template.idf")
+        template = environment.get_template("NR3_V03-24_template.idf")
         
         
         for i, values in enumerate(self.X):
