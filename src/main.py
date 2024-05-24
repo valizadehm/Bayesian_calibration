@@ -42,7 +42,9 @@ def main():
                             'length_TB_Nobel',
                             'length_TB_Turing'
                         ],
-                'distributions': ['unif', 'unif', 'unif', 'unif', 'unif', 'unif', 'unif', 'unif', 'unif', 'unif', 'unif']
+                'distributions': ['unif', 'unif', 'unif', 'unif', 'unif',
+                                  'unif', 'unif', 'unif', 'unif', 'unif',
+                                  'unif', 'unif', 'unif']
             }
     
     #Instantiate an object from the class SALib
