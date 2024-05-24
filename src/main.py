@@ -17,35 +17,34 @@ def main():
     # inside the idf template to be replaed and creat the idf samples) and their corresponding distribution function
     parameters = {
                 'bounds': [
-                            [1.0, 5.0],
-                            [0.05, 0.5],              
-                            [0.8, 1.0],
-                            [0.1, 0.9],
                             [0.1, 0.9],
                             [400, 2500],
-                            [1.8, 2.8],
                             [4.0, 12.0],
                             [0.0, 0.0038],
-                            [19, 0.25],
-                            [26, 0.25],
-                            [3, 5]
+                            [17, 127],
+                            [0.2, 2.35],
+                            [8, 75],
+                            [6, 55],
+                            [0.2, 4.7],
+                            [10, 95],
+                            [10, 95]
                     ],
                 'obj_id': [
-                            'Leaf_Area_Index',
-                            'Leaf_Reflectivity',
-                            'Leaf_Emissivity',
                             'Ground_reflectance',
-                            'Shading_reflectance',
                             'Infiltration',
-                            'People_density',
                             'Power_density',
-                            'Mechanical_ventilation',
-                            'Heating_setpoint',
-                            'Cooling_setpoint',
-                            'Lighting_density'
+                            'Mechanical_ventilation', 
+                            'length_TB_Hall',
+                            'length_TB_LocalTech',
+                            'length_TB_Tesla',
+                            'length_TB_Lumiere',
+                            'length_TB_Serveur',
+                            'length_TB_Nobel',
+                            'length_TB_Turing'
                         ],
-                'distributions': ['unif', 'unif', 'unif', 'unif', 'unif', 'unif',
-                                  'unif', 'unif', 'unif', 'norm', 'norm', 'unif']
+                'distributions': ['unif', 'unif', 'unif', 'unif', 'unif',
+                                  'unif', 'unif', 'unif', 'unif', 'unif',
+                                  'unif', 'unif', 'unif']
             }
     
     #Instantiate an object from the class SALib
