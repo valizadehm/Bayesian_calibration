@@ -2,3 +2,4 @@
 .venv/
 multi_runs/
 simulation/
+src/.ipynb_checkpoints
