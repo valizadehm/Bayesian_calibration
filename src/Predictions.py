@@ -62,7 +62,7 @@ def y_pred(posterior, x_star, xf, xc, tc, z):
     
     sig_eta_star = cov_exp(beta = beta_eta, l = lambda_eta, x1 = XT_star)
     sig_delta_star = cov_exp(beta = beta_delta, l = lambda_delta, x1 = x_star)
-    cov_y_star = sig_eta_star+sig_delta_star+np.eye((n_star, n_star))/lambda_eps
+    cov_y_star = sig_eta_star+sig_delta_star+np.eye(n_star)/lambda_eps
 
     cov_y_star -= M_y
 
